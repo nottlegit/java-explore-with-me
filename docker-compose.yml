@@ -15,7 +15,9 @@ services:
       retries: 10
 
   stats-server:
-    build: ./ewm-stats/ewm-stats-server
+    build:
+      context: .
+      dockerfile: ewm-stats/ewm-stats-server/Dockerfile
     container_name: stats-server
     depends_on:
       stats-db:
