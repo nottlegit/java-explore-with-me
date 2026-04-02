@@ -8,12 +8,18 @@ services:
       POSTGRES_PASSWORD: root
     ports:
       - "6541:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d stats" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   stats-server:
     build: ./ewm-stats/ewm-stats-server
     container_name: stats-server
     depends_on:
-      - stats-db
+      stats-db:
+        condition: service_healthy
     environment:
       DB_HOST: stats-db
       DB_PORT: 5432
@@ -22,3 +28,19 @@ services:
       POSTGRES_PASSWORD: root
     ports:
       - "9090:9090"
+    restart: on-failure
+
+  ewm-db:
+    image: postgres:16.1
+    container_name: ewm-db
+    environment:
+      POSTGRES_DB: ewm
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - "6542:5432"
+
+  ewm-service:
+    image: alpine:3.20
+    container_name: ewm-service
+    command: [ "sh", "-c", "sleep infinity" ]
