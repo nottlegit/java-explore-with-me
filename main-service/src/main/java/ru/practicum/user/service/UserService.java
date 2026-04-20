@@ -1,6 +1,7 @@
 package ru.practicum.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.common.exception.AlreadyExistsException;
 import ru.practicum.common.exception.NotFoundException;
@@ -13,34 +14,58 @@ import java.util.Collection;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
 
     public UserDto createUser(UserDto userDto) {
-        if (userRepository.existsByName(userDto.getName())) {
-            throw new AlreadyExistsException("User with name " + userDto.getName() + " already exists");
+        log.info("Создание пользователя email={}", userDto == null ? null : userDto.getEmail());
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new AlreadyExistsException("Пользователь с email " + userDto.getEmail() + " уже существует");
         }
-        return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
+        User saved = userRepository.save(UserMapper.toUser(userDto));
+        log.debug("Пользователь создан id={}", saved.getId());
+        return UserMapper.toUserDto(saved);
     }
 
     public User getUserOrThrow(Long userId) {
+        log.trace("Получение пользователя по id={}", userId);
         return userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException("User with id " + userId + " not found"));
+                () -> new NotFoundException("Пользователь с id " + userId + " не найден"));
     }
 
     public Collection<UserDto> getUsers(List<Long> ids, Integer from, Integer size) {
-        if (ids == null || ids.isEmpty()) {
-            return UserMapper.toUserDtoList(userRepository.findAll());
-        }
-        return UserMapper.toUserDtoList(userRepository.findAllById(ids));
+        log.info("Получение пользователей: количествоId={}, from={}, size={}",
+                ids == null ? 0 : ids.size(), from, size);
+        List<User> users = ids == null || ids.isEmpty()
+                ? userRepository.findAll()
+                : userRepository.findAllById(ids);
+        List<UserDto> result = users.stream()
+                .sorted((left, right) -> left.getId().compareTo(right.getId()))
+                .skip(defaultOffset(from))
+                .limit(defaultLimit(size))
+                .map(UserMapper::toUserDto)
+                .toList();
+        log.debug("Возвращено {} пользователей", result.size());
+        return result;
     }
 
     public void deleteUser(Long userId) {
+        log.info("Удаление пользователя id={}", userId);
         userRepository.deleteById(userId);
     }
 
     public Collection<User> getUsersByIds(List<Long> ids) {
+        log.trace("Получение пользователей по списку id, количествоId={}", ids == null ? 0 : ids.size());
         return userRepository.findAllById(ids);
+    }
+
+    private Integer defaultOffset(Integer from) {
+        return from == null || from < 0 ? 0 : from;
+    }
+
+    private long defaultLimit(Integer size) {
+        return size == null || size <= 0 ? 10L : size;
     }
 }

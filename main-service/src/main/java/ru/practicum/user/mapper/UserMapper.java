@@ -1,7 +1,6 @@
 package ru.practicum.user.mapper;
 
 import lombok.experimental.UtilityClass;
-import org.springframework.stereotype.Component;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.model.User;
@@ -9,7 +8,6 @@ import ru.practicum.user.model.User;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
 @UtilityClass
 public class UserMapper {
 
@@ -68,4 +66,3 @@ public class UserMapper {
                 .collect(Collectors.toList());
     }
 }
-

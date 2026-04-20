@@ -33,7 +33,7 @@ public class CategoryMapper {
             return null;
         }
         if (newName == null || newName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Name cannot be null or empty");
+            throw new IllegalArgumentException("Имя не может быть пустым");
         }
 
         return Category.builder()
