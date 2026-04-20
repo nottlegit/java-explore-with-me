@@ -38,7 +38,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         SELECT e FROM Event e
         LEFT JOIN FETCH e.category
         WHERE e.state = 'PUBLISHED'
-          AND (:text IS NULL 
+          AND (:text IS NULL
                OR LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%'))
                OR LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%')))
           AND (:categories IS NULL OR e.category.id IN :categories)
