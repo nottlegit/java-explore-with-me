@@ -18,7 +18,7 @@ public class EventValidator {
         }
         LocalDateTime minDate = LocalDateTime.now().plusHours(USER_EVENT_DATE_MIN_HOURS_AHEAD);
         if (eventDate.isBefore(minDate)) {
-            throw new ConflictException(
+            throw new BadRequestException(
                     String.format("Дата события должна быть не ранее чем через %d часа(ов) от текущего момента",
                             USER_EVENT_DATE_MIN_HOURS_AHEAD)
             );
@@ -31,7 +31,7 @@ public class EventValidator {
         }
         LocalDateTime minDate = LocalDateTime.now().plusHours(USER_EVENT_DATE_MIN_HOURS_AHEAD);
         if (eventDate.isBefore(minDate)) {
-            throw new ConflictException(
+            throw new BadRequestException(
                     String.format("Дата события должна быть не ранее чем через %d часа(ов) от текущего момента",
                             USER_EVENT_DATE_MIN_HOURS_AHEAD)
             );
@@ -44,7 +44,7 @@ public class EventValidator {
         }
         LocalDateTime minDate = LocalDateTime.now().plusHours(ADMIN_EVENT_DATE_MIN_HOURS_AHEAD);
         if (eventDate.isBefore(minDate)) {
-            throw new ConflictException(
+            throw new BadRequestException(
                     String.format("Дата события должна быть не ранее чем через %d часа(ов) от текущего момента",
                             ADMIN_EVENT_DATE_MIN_HOURS_AHEAD)
             );
