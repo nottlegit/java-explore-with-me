@@ -3,6 +3,7 @@ package ru.practicum.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.common.exception.BadRequestException;
 import ru.practicum.common.exception.AlreadyExistsException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.user.dto.UserDto;
@@ -21,6 +22,9 @@ public class UserService {
 
     public UserDto createUser(UserDto userDto) {
         log.info("Создание пользователя email={}", userDto == null ? null : userDto.getEmail());
+        if (userDto == null) {
+            throw new BadRequestException("Пользователь не задан");
+        }
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new AlreadyExistsException("Пользователь с email " + userDto.getEmail() + " уже существует");
         }
