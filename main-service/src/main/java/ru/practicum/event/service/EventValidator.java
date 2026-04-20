@@ -57,7 +57,7 @@ public class EventValidator {
             return;
         }
         if (eventDate.isBefore(LocalDateTime.now().plusHours(hoursFromNow))) {
-            throw new BadRequestException("Поле eventDate. Ошибка: должно содержать дату, которая еще не наступила.");
+            throw new BadRequestException("В поле eventDate ошибка: должно содержать дату, которая еще не наступила.");
         }
     }
 

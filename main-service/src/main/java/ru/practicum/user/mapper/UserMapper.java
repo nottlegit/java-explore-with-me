@@ -45,24 +45,4 @@ public class UserMapper {
                 .name(user.getName())
                 .build();
     }
-
-    public List<UserDto> toUserDtoList(List<User> usersList) {
-        if (usersList == null) {
-            return null;
-        }
-
-        return usersList.stream()
-                .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
-    }
-
-    public List<UserShortDto> toUserShortDtoList(List<User> usersList) {
-        if (usersList == null) {
-            return null;
-        }
-
-        return usersList.stream()
-                .map(UserMapper::toUserShortDto)
-                .collect(Collectors.toList());
-    }
 }

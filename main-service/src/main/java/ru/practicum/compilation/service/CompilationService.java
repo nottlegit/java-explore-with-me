@@ -93,7 +93,11 @@ public class CompilationService {
         }
 
         Map<Long, Event> byId = eventRepository.findAllById(eventIds).stream()
-                .collect(Collectors.toMap(Event::getId, event -> event, (left, right) -> left, LinkedHashMap::new));
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        event -> event,
+                        (left, right) -> left, LinkedHashMap::new)
+                );
 
         List<Event> events = new ArrayList<>();
         for (Long eventId : eventIds) {

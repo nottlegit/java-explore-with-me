@@ -56,11 +56,6 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    public Collection<User> getUsersByIds(List<Long> ids) {
-        log.trace("Получение пользователей по списку id, количествоId={}", ids == null ? 0 : ids.size());
-        return userRepository.findAllById(ids);
-    }
-
     private Integer defaultOffset(Integer from) {
         return from == null || from < 0 ? 0 : from;
     }
