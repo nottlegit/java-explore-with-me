@@ -2,7 +2,6 @@ package ru.practicum.event.service;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.common.exception.BadRequestException;
-import ru.practicum.common.exception.ConflictException;
 
 import java.time.LocalDateTime;
 
