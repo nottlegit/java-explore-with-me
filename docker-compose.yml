@@ -41,6 +41,14 @@ services:
       - "6542:5432"
 
   ewm-service:
-    image: alpine:3.20
+    build:
+      context: .
+      dockerfile: main-service/Dockerfile
     container_name: ewm-service
-    command: [ "sh", "-c", "sleep infinity" ]
+    depends_on:
+      stats-server:
+        condition: service_started
+    environment:
+      STATS_SERVER_URL: http://stats-server:9090
+    ports:
+      - "8080:8080"

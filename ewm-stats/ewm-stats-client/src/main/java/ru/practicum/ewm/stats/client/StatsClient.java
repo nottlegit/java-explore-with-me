@@ -5,17 +5,16 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.StatsDateTimeFormat;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class StatsClient {
@@ -44,8 +43,13 @@ public class StatsClient {
                 .timestamp(hitDto.getTimestamp())
                 .build();
 
+        URI uri = UriComponentsBuilder.fromHttpUrl(serverUrl)
+                .path("/hit")
+                .build()
+                .toUri();
+
         ResponseEntity<EndpointHitDto> response = restTemplate.postForEntity(
-                serverUrl + "/hit",
+                uri,
                 request,
                 EndpointHitDto.class
         );
@@ -54,24 +58,19 @@ public class StatsClient {
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        String encodedStart = URLEncoder.encode(start.format(FORMATTER), StandardCharsets.UTF_8);
-        String encodedEnd = URLEncoder.encode(end.format(FORMATTER), StandardCharsets.UTF_8);
-
-        StringBuilder urlBuilder = new StringBuilder(serverUrl)
-                .append("/stats?start=").append(encodedStart)
-                .append("&end=").append(encodedEnd);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(serverUrl)
+                .path("/stats")
+                .queryParam("start", start.format(FORMATTER))
+                .queryParam("end", end.format(FORMATTER))
+                .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
-            String encodedUris = uris.stream()
-                    .map(uri -> URLEncoder.encode(uri, StandardCharsets.UTF_8))
-                    .collect(Collectors.joining(","));
-            urlBuilder.append("&uris=").append(encodedUris);
+            uriBuilder.queryParam("uris", uris.toArray());
         }
 
-        urlBuilder.append("&unique=").append(unique);
-
+        URI uri = uriBuilder.build().toUri();
         ResponseEntity<ViewStatsDto[]> response =
-                restTemplate.getForEntity(urlBuilder.toString(), ViewStatsDto[].class);
+                restTemplate.getForEntity(uri, ViewStatsDto[].class);
 
         ViewStatsDto[] body = response.getBody();
         return body != null ? Arrays.asList(body) : List.of();

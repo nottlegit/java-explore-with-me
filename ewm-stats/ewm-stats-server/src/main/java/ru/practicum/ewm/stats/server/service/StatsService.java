@@ -2,6 +2,8 @@ package ru.practicum.ewm.stats.server.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
 import ru.practicum.ewm.stats.server.mapper.StatsMapper;
@@ -28,6 +30,10 @@ public class StatsService {
             LocalDateTime end,
             List<String> uris,
             boolean unique) {
+        if (start.isAfter(end)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Начало диапазона не может быть позже конца");
+        }
+
         boolean hasUris = uris != null && !uris.isEmpty();
 
         if (unique) {
