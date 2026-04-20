@@ -16,7 +16,6 @@ import ru.practicum.event.model.Event;
 import ru.practicum.location.dto.LocationDto;
 
 import java.time.LocalDateTime;
-import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +28,7 @@ public class EventUpdateService {
             return;
         }
 
-        applyCommonUpdate(event,
+        applyCommonFields(event,
                 request.getAnnotation(),
                 request.getDescription(),
                 request.getTitle(),
@@ -38,8 +37,11 @@ public class EventUpdateService {
                 request.getPaid(),
                 request.getParticipantLimit(),
                 request.getRequestModeration(),
-                request.getEventDate(),
-                eventValidator::validateUserEventDate);
+                request.getEventDate());
+
+        if (request.getEventDate() != null) {
+            eventValidator.validateUserEventDate(request.getEventDate());
+        }
 
         applyUserStateTransition(event, request.getStateAction());
     }
@@ -49,7 +51,7 @@ public class EventUpdateService {
             return;
         }
 
-        applyCommonUpdate(event,
+        applyCommonFields(event,
                 request.getAnnotation(),
                 request.getDescription(),
                 request.getTitle(),
@@ -58,13 +60,16 @@ public class EventUpdateService {
                 request.getPaid(),
                 request.getParticipantLimit(),
                 request.getRequestModeration(),
-                request.getEventDate(),
-                eventValidator::validateAdminEventDate);
+                request.getEventDate());
+
+        if (request.getEventDate() != null) {
+            eventValidator.validateAdminEventDate(request.getEventDate());
+        }
 
         applyAdminStateTransition(event, request.getStateAction());
     }
 
-    private void applyCommonUpdate(Event event,
+    private void applyCommonFields(Event event,
                                    String annotation,
                                    String description,
                                    String title,
@@ -73,18 +78,14 @@ public class EventUpdateService {
                                    Boolean paid,
                                    Integer participantLimit,
                                    Boolean requestModeration,
-                                   LocalDateTime eventDate,
-                                   Consumer<LocalDateTime> eventDateValidator) {
+                                   LocalDateTime eventDate) {
         if (annotation != null) {
-            eventValidator.validateAnnotation(annotation);
             event.setAnnotation(annotation.trim());
         }
         if (description != null) {
-            eventValidator.validateDescription(description);
             event.setDescription(description.trim());
         }
         if (title != null) {
-            eventValidator.validateTitle(title);
             event.setTitle(title.trim());
         }
         if (categoryId != null) {
@@ -97,41 +98,49 @@ public class EventUpdateService {
             event.setPaid(paid);
         }
         if (participantLimit != null) {
-            eventValidator.validateParticipantLimit(participantLimit);
             event.setParticipantLimit(participantLimit);
         }
         if (requestModeration != null) {
             event.setRequestModeration(requestModeration);
         }
         if (eventDate != null) {
-            eventDateValidator.accept(eventDate);
             event.setEventDate(eventDate);
         }
     }
 
     private void applyUserStateTransition(Event event, StateActionUser stateAction) {
-        if (stateAction == StateActionUser.CANCEL_REVIEW) {
-            event.setState(EventState.CANCELED);
-        } else if (stateAction == StateActionUser.SEND_TO_REVIEW) {
-            event.setState(EventState.PENDING);
+        if (stateAction == null) {
+            return;
+        }
+
+        switch (stateAction) {
+            case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
+            case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
         }
     }
 
     private void applyAdminStateTransition(Event event, StateActionAdmin stateAction) {
-        if (stateAction == StateActionAdmin.PUBLISH_EVENT) {
-            if (event.getState() != EventState.PENDING) {
-                throw new ConflictException("Нельзя опубликовать событие, если оно не находится в статусе ожидания");
+        if (stateAction == null) {
+            return;
+        }
+
+        switch (stateAction) {
+            case PUBLISH_EVENT -> {
+                if (event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Нельзя опубликовать событие, если оно не находится в статусе ожидания");
+                }
+                if (!eventValidator.isValidPublishEventDate(event.getEventDate())) {
+                    throw new ConflictException("Дата события должна быть не раньше чем через час после публикации");
+                }
+                event.setState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
             }
-            if (!eventValidator.isValidPublishEventDate(event.getEventDate())) {
-                throw new ConflictException("Дата события должна быть не раньше чем через час после публикации");
+            case REJECT_EVENT -> {
+                if (event.getState() == EventState.PUBLISHED) {
+                    throw new ConflictException("Нельзя отклонить уже опубликованное событие");
+                }
+                event.setState(EventState.CANCELED);
             }
-            event.setState(EventState.PUBLISHED);
-            event.setPublishedOn(LocalDateTime.now());
-        } else if (stateAction == StateActionAdmin.REJECT_EVENT) {
-            if (event.getState() == EventState.PUBLISHED) {
-                throw new ConflictException("Нельзя отклонить уже опубликованное событие");
-            }
-            event.setState(EventState.CANCELED);
         }
     }
 

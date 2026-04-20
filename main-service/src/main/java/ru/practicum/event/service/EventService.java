@@ -23,6 +23,7 @@ import ru.practicum.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,13 +42,12 @@ public class EventService {
         User initiator = userService.getUserOrThrow(userId);
         Category category = getCategoryOrThrow(newEventDto.getCategory());
 
-        eventValidator.validateNewEvent(newEventDto);
+        eventValidator.validateNewEventDate(newEventDto.getEventDate());
 
         Event event = EventMapper.toEvent(newEventDto, category, initiator);
         event.setCreatedOn(LocalDateTime.now());
         event.setState(EventState.PENDING);
-        event.setRequestModeration(newEventDto.getRequestModeration() == null
-                || newEventDto.getRequestModeration());
+        event.setRequestModeration(newEventDto.getRequestModeration() == null || newEventDto.getRequestModeration());
         event.setParticipantLimit(eventValidator.normalizeParticipantLimit(newEventDto.getParticipantLimit()));
         event.setPaid(Boolean.TRUE.equals(newEventDto.getPaid()));
 
@@ -60,12 +60,12 @@ public class EventService {
         log.info("Получение событий пользователя {} с параметрами from={}, size={}", userId, from, size);
         userService.getUserOrThrow(userId);
 
-        Pageable pageable = buildPageable(from, size, null);
+        Pageable pageable = buildPageable(from, size, Sort.by(Sort.Direction.DESC, "createdOn"));
 
         return eventRepository.findAllByInitiator_IdOrderByCreatedOnDesc(userId, pageable)
                 .stream()
                 .map(EventMapper::toEventShortDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -106,9 +106,9 @@ public class EventService {
         Pageable pageable = buildPageable(from, size, Sort.by(Sort.Direction.DESC, "createdOn"));
 
         Page<Event> page = eventRepository.findEvents(
-                (users == null || users.isEmpty()) ? null : users,
-                (states == null || states.isEmpty()) ? null : states,
-                (categories == null || categories.isEmpty()) ? null : categories,
+                isEmpty(users) ? null : users,
+                isEmpty(states) ? null : states,
+                isEmpty(categories) ? null : categories,
                 rangeStart,
                 rangeEnd,
                 pageable
@@ -116,9 +116,9 @@ public class EventService {
 
         List<EventDto> events = page.stream()
                 .map(EventMapper::toEventDto)
-                .toList();
+                .collect(Collectors.toList());
 
-        setView(events);
+        eventViewService.enrichEventDtos(events);
         return events;
     }
 
@@ -141,7 +141,6 @@ public class EventService {
                                                      Integer from,
                                                      Integer size,
                                                      HttpServletRequest request) {
-
         log.info("Публичный поиск событий. "
                         + "text='{}', categories={}, paid={}, rangeStart={}, rangeEnd={}, "
                         + "onlyAvailable={}, sort={}, from={}, size={}",
@@ -153,7 +152,7 @@ public class EventService {
 
         Page<Event> page = eventRepository.findPublicEvents(
                 text,
-                (categories == null || categories.isEmpty()) ? null : categories,
+                isEmpty(categories) ? null : categories,
                 paid,
                 rangeStart,
                 rangeEnd,
@@ -163,19 +162,19 @@ public class EventService {
 
         List<Event> events = page.getContent();
 
-        if ("VIEWS".equals(sort)) {
+        if ("VIEWS".equalsIgnoreCase(sort)) {
             Map<Long, Long> viewsByEventId = eventViewService.getViewsByEvents(events);
             events = events.stream()
                     .sorted(Comparator.comparingLong((Event event) ->
                             viewsByEventId.getOrDefault(event.getId(), 0L)).reversed())
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
-        return eventViewService.enrichShortDtos(
-                events.stream()
-                        .map(EventMapper::toEventShortDto)
-                        .toList()
-        );
+        List<EventShortDto> dtos = events.stream()
+                .map(EventMapper::toEventShortDto)
+                .collect(Collectors.toList());
+
+        return eventViewService.enrichShortDtos(dtos);
     }
 
     @Transactional(readOnly = true)
@@ -190,10 +189,6 @@ public class EventService {
 
     public boolean isExistingByCategoryId(Long catId) {
         return eventRepository.existsByCategory_Id(catId);
-    }
-
-    public void setView(List<EventDto> events) {
-        eventViewService.enrichEventDtos(events);
     }
 
     private Event getPublishedEventOrThrow(Long eventId) {
@@ -227,7 +222,6 @@ public class EventService {
         return sort == null
                 ? PageRequest.of(page, limit)
                 : PageRequest.of(page, limit, sort);
-
     }
 
     private int defaultOffset(Integer from) {
@@ -236,5 +230,9 @@ public class EventService {
 
     private int defaultLimit(Integer size) {
         return size == null || size <= 0 ? 10 : size;
+    }
+
+    private boolean isEmpty(Collection<?> collection) {
+        return collection == null || collection.isEmpty();
     }
 }
