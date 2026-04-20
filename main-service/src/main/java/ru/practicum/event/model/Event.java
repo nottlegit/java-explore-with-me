@@ -3,7 +3,7 @@ package ru.practicum.event.model;
 import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.category.model.Category;
-import ru.practicum.common.enums.EventState;
+import ru.practicum.event.enums.EventState;
 import ru.practicum.location.model.Location;
 import ru.practicum.user.model.User;
 
@@ -23,7 +23,7 @@ public class Event {
 
     private String annotation;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
     @Column(name = "created_on")
@@ -34,16 +34,16 @@ public class Event {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User initiator;
 
-    @OneToOne(cascade = {CascadeType.ALL})
+    @Embedded
     private Location location;
 
     private Boolean paid;
 
     @Column(name = "participant_limit")
-    private int participantLimit;
+    private Integer participantLimit;
 
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
@@ -53,7 +53,7 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_state")
-    private EventState EventState;
+    private EventState state;
 
     private String title;
 }

@@ -1,9 +1,11 @@
 package ru.practicum.event.dto;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import ru.practicum.common.config.DateTimeFormatConfig;
-import ru.practicum.common.enums.StateActionAdmin;
-import ru.practicum.location.model.Location;
+import ru.practicum.event.enums.StateActionAdmin;
+import ru.practicum.location.dto.LocationDto;
 
 import java.time.LocalDateTime;
 
@@ -19,9 +21,11 @@ public class UpdateEventAdminDto {
 
     @JsonFormat(pattern = DateTimeFormatConfig.PATTERN)
     private LocalDateTime eventDate;
-    private Location location;
+    private LocationDto location;
     private Boolean paid;
-    private Long participantLimit;
+
+    @PositiveOrZero
+    private Integer participantLimit;
     private Boolean requestModeration;
     private StateActionAdmin stateAction;
     private String title;
