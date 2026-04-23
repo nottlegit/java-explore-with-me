@@ -43,4 +43,10 @@ public class ErrorHandler {
     public ErrorResponse handleBadRequest(Exception ex) {
         return new ErrorResponse(ex.getMessage());
     }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Throwable.class)
+    public ErrorResponse handleServerError(Exception ex) {
+        return new ErrorResponse("Внутренняя ошибка сервера: " + ex.getMessage());
+    }
 }
