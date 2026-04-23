@@ -42,8 +42,8 @@ public class AdminEventController {
                 @DateTimeFormat(pattern = DateTimeFormatConfig.PATTERN) LocalDateTime rangeStart,
             @RequestParam(name = "rangeEnd", required = false)
                 @DateTimeFormat(pattern = DateTimeFormatConfig.PATTERN) LocalDateTime rangeEnd,
-            @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
-            @RequestParam(required = false, defaultValue = "10") @Positive Integer size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Администратор запрашивает список событий:"
                         + " users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);

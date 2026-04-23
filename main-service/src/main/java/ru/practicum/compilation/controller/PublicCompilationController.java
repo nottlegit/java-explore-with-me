@@ -19,8 +19,8 @@ public class PublicCompilationController {
 
     @GetMapping
     public Collection<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
-                                                      @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                      @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                                      @RequestParam(defaultValue = "0") Integer from,
+                                                      @RequestParam(defaultValue = "10") Integer size) {
         log.info("Публичный запрос списка подборок: pinned={}, from={}, size={}", pinned, from, size);
         return compilationService.getCompilations(pinned, from, size);
     }
