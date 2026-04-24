@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
@@ -29,6 +30,7 @@ public class CommentService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public Collection<CommentDto> getComments(Long eventId, Integer from, Integer size) {
         log.info("Получение комментариев для события {} (from={}, size={})", eventId, from, size);
         Event event = getEventOrThrow(eventId);
@@ -39,6 +41,7 @@ public class CommentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public CommentDto getComment(Long commentId) {
         log.info("Получение комментария {}", commentId);
         Comment comment = getCommentOrThrow(commentId);
@@ -46,7 +49,7 @@ public class CommentService {
         return CommentMapper.toCommentDto(comment);
     }
 
-
+    @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto dto) {
         log.info("Создание комментария для события {} от пользователя {}", eventId, userId);
         User author = getUserOrThrow(userId);
@@ -63,6 +66,7 @@ public class CommentService {
         return CommentMapper.toCommentDto(comment);
     }
 
+    @Transactional
     public CommentDto updateComment(Long userId, Long commentId, UpdateCommentDto dto) {
         log.info("Обновление комментария {} пользователем {}", commentId, userId);
         User author = getUserOrThrow(userId);
@@ -80,6 +84,7 @@ public class CommentService {
         return CommentMapper.toCommentDto(comment);
     }
 
+    @Transactional
     public void deleteComment(Long userId, Long commentId) {
         log.info("Удаление комментария {} пользователем {}", commentId, userId);
         Comment comment = getCommentOrThrow(commentId);
@@ -93,6 +98,7 @@ public class CommentService {
         log.info("Комментарий {} удален пользователем {}", commentId, userId);
     }
 
+    @Transactional
     public void deleteComment(Long commentId) {
         log.info("Администратор удаляет комментарий {}", commentId);
         Comment comment = getCommentOrThrow(commentId);
